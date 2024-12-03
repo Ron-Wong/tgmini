@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram Mini App with Discourse Integration</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="css/style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -106,53 +106,6 @@
         // Utility function to generate a random password
         function generateRandomPassword() {
             return Math.random().toString(36).slice(-10);
-        }
-
-        // Add functionality for posting, replying, and liking
-        // This could be done using Discourse API and embedding JavaScript to interact with the forum
-        async function postToDiscourse(topicTitle, content) {
-            try {
-                const postResponse = await fetch('https://your-discourse-forum-url/posts.json', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        title: topicTitle,
-                        raw: content,
-                        category: 1 // Change to desired category
-                    })
-                });
-
-                if (!postResponse.ok) {
-                    throw new Error('Failed to post to Discourse');
-                }
-            } catch (error) {
-                console.error('Error during Discourse post:', error);
-            }
-        }
-
-        // Send and receive private messages in Discourse
-        async function sendPrivateMessage(receiverUsername, content) {
-            try {
-                const messageResponse = await fetch('https://your-discourse-forum-url/posts.json', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        target_usernames: receiverUsername,
-                        raw: content,
-                        archetype: 'private_message'
-                    })
-                });
-
-                if (!messageResponse.ok) {
-                    throw new Error('Failed to send private message in Discourse');
-                }
-            } catch (error) {
-                console.error('Error during private message sending:', error);
-            }
         }
     </script>
 </body>
