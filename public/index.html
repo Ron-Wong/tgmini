@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Mini App with Discourse Integration</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">Welcome to Our Mini App!</h1>
+            <p class="subtitle">Integrated with Discourse Forum</p>
+
+            <div id="telegram-login"></div>
+            <div id="discourse-section" class="mt-5">
+                <h2 class="subtitle">Join the Conversation</h2>
+                <iframe id="discourse-embed" src="" width="100%" height="500px" frameborder="0"></iframe>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Initialize Telegram Web App
+        const telegram = window.Telegram.WebApp;
+        telegram.ready();
+
+        // Display Telegram User Login Widget
+        window.onload = async function () {
+            const TelegramLoginWidget = document.getElementById('telegram-login');
+            TelegramLoginWidget.innerHTML = '<script async src="https://telegram.org/js/telegram-widget.js?11" data-telegram-login="your_bot_username" data-size="large" data-radius="8" data-auth-url="/auth/callback"></script>';
+
+            // After Telegram login, proceed to Discourse login
+            const user = await getTelegramUser();
+            if (user) {
+                await handleDiscourseLogin(user);
+            }
+        }
+
+        // Function to get Telegram user data after login
+        async function getTelegramUser() {
+            return new Promise((resolve) => {
+                telegram.onEvent('auth', (user) => {
+                    resolve(user);
+                });
+            });
+        }
+
+        // Handle Discourse Login or Registration
+        async function handleDiscourseLogin(user) {
+            try {
+                // Check if the user already has a Discourse account
+                const response = await fetch('https://your-discourse-forum-url/session/current.json', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (!data.current_user) {
+                        // Register user if they do not have a Discourse account
+                        await registerDiscourseUser(user);
+                    }
+                } else {
+                    throw new Error('Failed to fetch current Discourse session');
+                }
+
+                // Once logged in or registered, load the main content
+                loadDiscourseContent();
+            } catch (error) {
+                console.error('Error during Discourse login:', error);
+            }
+        }
+
+        // Register a new Discourse user using Telegram data
+        async function registerDiscourseUser(user) {
+            try {
+                const registerResponse = await fetch('https://your-discourse-forum-url/users.json', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: user.first_name,
+                        username: user.username || user.id,
+                        email: `${user.id}@telegram.com`,
+                        password: generateRandomPassword()
+                    })
+                });
+
+                if (!registerResponse.ok) {
+                    throw new Error('Failed to register user in Discourse');
+                }
+            } catch (error) {
+                console.error('Error during Discourse registration:', error);
+            }
+        }
+
+        // Load Discourse content after successful login
+        function loadDiscourseContent() {
+            const discourseEmbed = document.getElementById('discourse-embed');
+            discourseEmbed.src = "https://your-discourse-forum-url/";
+        }
+
+        // Utility function to generate a random password
+        function generateRandomPassword() {
+            return Math.random().toString(36).slice(-10);
+        }
+
+        // Add functionality for posting, replying, and liking
+        // This could be done using Discourse API and embedding JavaScript to interact with the forum
+        async function postToDiscourse(topicTitle, content) {
+            try {
+                const postResponse = await fetch('https://your-discourse-forum-url/posts.json', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: topicTitle,
+                        raw: content,
+                        category: 1 // Change to desired category
+                    })
+                });
+
+                if (!postResponse.ok) {
+                    throw new Error('Failed to post to Discourse');
+                }
+            } catch (error) {
+                console.error('Error during Discourse post:', error);
+            }
+        }
+
+        // Send and receive private messages in Discourse
+        async function sendPrivateMessage(receiverUsername, content) {
+            try {
+                const messageResponse = await fetch('https://your-discourse-forum-url/posts.json', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        target_usernames: receiverUsername,
+                        raw: content,
+                        archetype: 'private_message'
+                    })
+                });
+
+                if (!messageResponse.ok) {
+                    throw new Error('Failed to send private message in Discourse');
+                }
+            } catch (error) {
+                console.error('Error during private message sending:', error);
+            }
+        }
+    </script>
+</body>
+</html>
